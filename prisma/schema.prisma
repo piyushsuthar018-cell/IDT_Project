@@ -1,0 +1,74 @@
+// Prisma schema for StudyPulse (Smart Academic Organizer & Exam Readiness System)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Subject {
+  id          String             @id @default(cuid())
+  code        String
+  name        String
+  instructor  String?            @default("")
+  examDate    DateTime?
+  color       String             @default("indigo")
+  createdAt   DateTime           @default(now())
+  units       SyllabusUnit[]
+  deadlines   Deadline[]
+  resources   Resource[]
+  milestones  RoadmapMilestone[]
+}
+
+model SyllabusUnit {
+  id          String          @id @default(cuid())
+  subjectId   String
+  unitNumber  Int
+  title       String
+  subject     Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topics      SyllabusTopic[]
+}
+
+model SyllabusTopic {
+  id          String       @id @default(cuid())
+  unitId      String
+  title       String
+  status      String       @default("UNTOUCHED") // "UNTOUCHED" | "IN_PROGRESS" | "MASTERED"
+  unit        SyllabusUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+}
+
+model Deadline {
+  id          String   @id @default(cuid())
+  subjectId   String?
+  title       String
+  type        String   @default("assignment") // "exam" | "assignment" | "lab_report" | "quiz"
+  dueDate     DateTime
+  status      String   @default("pending")    // "pending" | "submitted"
+  subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+}
+
+model Resource {
+  id          String   @id @default(cuid())
+  subjectId   String
+  title       String
+  fileType    String   // "pdf" | "code" | "notes" | "formula_sheet"
+  fileUrl     String
+  fileSize    String?
+  unitNumber  Int?
+  isStarred   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+}
+
+model RoadmapMilestone {
+  id          String    @id @default(cuid())
+  subjectId   String
+  phase       Int       // 1, 2, or 3
+  title       String
+  dueDate     DateTime?
+  isCompleted Boolean   @default(false)
+  subject     Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+}
